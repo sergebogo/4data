@@ -1,0 +1,125 @@
+---
+title: "Data_science_project"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+## Data science project
+This project is divided into three parts. The first part is devoted to data analysis. The second will deal with the association rules and the third will treat the recommandation system.
+# Part 1: Data analysis
+## Step 1 : Download the  arules package
+This step is done by using this command: 
+## Step 2 : Load the Groceries data set 
+First of all, we have to load the necessary packages.
+```{r}
+library(Matrix)
+library(arules)
+```
+Now, let us load the Groceries data set.
+```{r}
+data("Groceries") ## loading the data set.
+#class(Groceries)
+```
+## Step 3 : Data exploration
+Let us the summary function in order to explore the Groceries data set.
+```{r}
+summary(Groceries)
+```
+a) There are 169 items in the data set.
+b) There are 9835 transactions in the data set.
+c) The density is 0.02609146. 
+d) The density gives the number of (non missing value) transactions in the data set.
+e) The most commonly found item is the {whole milk}. 
+f) The percentage of transactions which contains yogurt is computed by $1372/9835$. After computation, we get 0.13950.
+g) 545 transactions have seven items.
+h) 1643 have two transactions.
+i) The average number of items in a transaction is 4.409.
+
+## Bonus
+Let us inspect function. This function give all items. We will figure out only 5 items.
+```{r}
+inspect(Groceries[1:5,])
+```
+The frequency of items is obtained thanks to itemFrequency function.
+```{r}
+itemFrequency(Groceries[1:10,])
+```
+Let us plot the ten most frequent items which having support equals to 0.10.
+
+```{r}
+itemFrequencyPlot(Groceries, topN = 20, support = 0.10)
+```
+
+# Part 2:`Step 1: Load Data and preprocess text
+Let us load and preprocess text.
+## Step 1 :
+```{r}
+model_one <- apriori(Groceries)
+```
+The default value of support and confidence give 0 rules. We can easily verify:
+```{r}
+model_one
+```
+```{r}
+summary(model_one)
+```
+
+## Step 2 
+Now, we will utilize different values of support, confidence and lift.
+```{r}
+model_two <- apriori(Groceries, parameter = list(support = 0.05, confidence = 0.25))
+```
+
+With support equals 0.05 and confidence equals 0.25, we get 5 rules.
+```{r}
+summary(model_two)
+```
+We have 4 rules with two items and 1 rule has 1 item.
+```{r}
+inspect(model_two)
+```
+If someone buys yogurt, then he will buy whole milk. When whole milk is bought, then other vegetables is purchased.
+```{r}
+model_three <- apriori(Groceries, parameter = list(support = 0.15, confidence = 0.25))
+```
+We got 1 rule. Let us try another value of support and confidence.
+```{r}
+inspect(model_three)
+```
+Someone who buys nothing can buy whole milk.
+```{r}
+summary(model_three)
+```
+
+```{r}
+model_four <- apriori(Groceries, parameter = list(support = 0.05, confidence = 0.10))
+```
+With support = 0.05 and confidence = 0.10, we got 14 rules.
+```{r}
+inspect(model_four)
+```
+When Yogurt is bought then whole milk will be buy too. 
+```{r}
+summary(model_four)
+```
+c. Are these rules interesting? What three categories are used to define "interesting"?
+These rules are interesting. The three categories used to defin interesting are support, confidence and lift.
+# Project Part 3 : Create a recommendation engine
+
+We will use the sparse matrix given by Groceries@data for building the recommendation model. Let us translate it in dgcMatrix.
+```{r}
+library("recommenderlab")          
+r<- as(Groceries@data, "dgCMatrix")
+```
+
+The affinity matrix is:
+```{r}
+aff_matrix<- as(r,"realRatingMatrix")
+```
+Let us recommender function of recommenderlab library for recommendation.
+```{r}
+Rec.model<-Recommender(aff_matrix[1:169], method = "UBCF")
+```
+
